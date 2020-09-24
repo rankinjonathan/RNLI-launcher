@@ -3,6 +3,10 @@
 // visit io.adafruit.com if you need to create an account,
 // or if you need your Adafruit IO key.
 
+
+#define IO_USERNAME  "Rankinjonathan"
+#define IO_KEY       "aio_eeKW14HgriP0bWLqf8MFHnTCRwd4"
+
 /******************************* WIFI **************************************/
 
 // the AdafruitIO_WiFi client will work with the following boards:
@@ -17,7 +21,9 @@
 //   - Adafruit AirLift Shield -> https://www.adafruit.com/product/4285
 //   - Adafruit AirLift FeatherWing -> https://www.adafruit.com/product/4264
 
-//Wifi username and password
+//Wifi username and 
+#define WIFI_SSID   "VM6980419"
+#define WIFI_PASS   "fz7ScsrpXxyd"
 
 // uncomment the following line if you are using airlift
 // #define USE_AIRLIFT

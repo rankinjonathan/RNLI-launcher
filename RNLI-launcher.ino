@@ -1,8 +1,12 @@
 #include <Arduino.h>
 #include <U8x8lib.h>
-#include <SPI.h>
-#include <Wire.h>
 
+#ifdef U8X8_HAVE_HW_SPI
+#include <SPI.h>
+#endif
+#ifdef U8X8_HAVE_HW_I2C
+#include <Wire.h>
+#endif
 //-------------------------- Configuration --------------------------
 
 
@@ -33,6 +37,9 @@ const int ledPin = 13;       // the pin that the LED is attached to
 unsigned long timer;
 unsigned long timerOffset;
 
+unsigned long currentTime;
+unsigned long startTime;
+
 unsigned long contractLength = 600000;
 unsigned long timeLeft;
 
@@ -57,7 +64,14 @@ U8X8_SSD1322_NHD_256X64_4W_SW_SPI u8x8(/* clock=*/ 24, /* data=*/ 23, /* cs=*/ 1
 
 void setup() {
 
+  Serial.begin(9600);        // Start reading from Serial communication interface
+
+  u8x8.begin();
+  u8x8.setFont(u8x8_font_chroma48medium8_r);
+
   Serial.println("IO test");
+
+
 
 
   // initialize the LED as an output:
@@ -67,7 +81,6 @@ void setup() {
   WiFi.setPins(8, 7, 4, 2);
 
   // initialize serial communication:
-  Serial.begin(115200);
 
   // wait for serial monitor to open
   while (! Serial);
@@ -98,7 +111,7 @@ void setup() {
   Serial.print("Start time = ");
   Serial.println(timer);
 
-  timerOffset = millis();
+  startTime = millis();
 
 
   Serial.print("Finished the setup");
@@ -118,32 +131,44 @@ void loop() {
 
   io.run();
 
+  //  tweet = "Jonathan";
+  //  Serial.print("TEST POINT 1");
+  //  Serial.println("\n");
+  //  u8x8.clear();
+  //  u8x8.setCursor(0, 0);
+  //  u8x8.print(tweet);
+  //
+  //  delay(10000);
+  //  tweet = "Clare";
+  //  Serial.print("TEST POINT 2");
+  //  Serial.println("\n");
+  //  u8x8.clear();
+  //  u8x8.setCursor(0, 0);
+  //  u8x8.print(tweet);
+  //  delay(10000);
 
-  timer = millis() - timerOffset;
+  currentTime = millis();
 
+  timer = currentTime - startTime;
+
+  Serial.print("Time Left in Contract: ");
+  Serial.print((contractLength - (currentTime - startTime)) / 1000);
+  Serial.println(" seconds");
 
   //-------------------------- If there is a timer runing and an event happened  --------------------------
 
-  if (X > 0 && contractLength > timer && happened == 1) {
+  if (X > 0 && timer < contractLength && happened == 1) {
     Serial.println("Donate £1");
     Serial.print("counter =    ");
     Serial.println(X);
     //-------------------------- Do this section if there is a RNLI launch  --------------------------
 
-  Serial.println(tweet);
+    Serial.print("TEST POINT 3 -- ");
+    Serial.println(tweet);
 
-  Serial.print("TEST POINT 1");
-  Serial.println("\n");
-  
-  u8x8.begin();
-  u8x8.clear();
-  u8x8.setFont(u8x8_font_chroma48medium8_r);
-  u8x8.setCursor(0, 0);
-  u8x8.print(tweet);
-
-  delay(5000);
-
-  //  u8x8.drawString(0, 1, tweet);
+    u8x8.clear();
+    u8x8.setCursor(0, 0);
+    u8x8.print(tweet);
 
     //-------------------------- Reset trigger and take 1 off the count  --------------------------
 
@@ -154,31 +179,20 @@ void loop() {
   }
 
 
-  else if (X == 0) {
+  else if (X == 0 && timer < contractLength) {
     Serial.println("All money has been donated");;
-
     timeLeft = contractLength - timer;
     delay(timeLeft);
     happened = 0;
-    X = 0;
 
   }
 
   else if (timer > contractLength) {
     Serial.println("Contract finished - restarting contract");
-    timerOffset = millis();
-
     happened = 0;
-
-    if (X > 0) {
-
-      //      Serial.print("counter  c - ");
-      X--;
-    }
-    else {
-      X = 0;
-    }
   }
+
+  delay(1000);
 
 }
 

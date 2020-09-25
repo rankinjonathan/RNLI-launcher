@@ -5,7 +5,7 @@
 
 
 #define IO_USERNAME  "Rankinjonathan"
-#define IO_KEY       "aio_eeKW14HgriP0bWLqf8MFHnTCRwd4"
+#define IO_KEY       "aio_SVph616msXuzQcy8zqPwVrvNrlaL"
 
 /******************************* WIFI **************************************/
 

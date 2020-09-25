@@ -28,14 +28,12 @@
 AdafruitIO_Feed *sharedFeed = io.feed("rnli-launcher", FEED_OWNER);
 
 //
-//const int buttonPin = 10;     // the number of the pushbutton pin
 const int ledPin = 13;       // the pin that the LED is attached to
 
 
 // Variables will change:
 
 unsigned long timer;
-unsigned long timerOffset;
 
 unsigned long currentTime;
 unsigned long startTime;
@@ -49,14 +47,19 @@ String currentSerialVal = "";   //Put the current serial value in this variable
 
 String tweet = "";
 
-
 boolean stringComplete = false;  // whether the string is complete
 
 int happened = 0;
 int X = 11;
 
-U8X8_SSD1322_NHD_256X64_4W_SW_SPI u8x8(/* clock=*/ 24, /* data=*/ 23, /* cs=*/ 10, /* dc=*/ 9, /* reset=*/ 5);
+//U8X8_SSD1322_NHD_256X64_4W_SW_SPI u8x8(/* clock=*/ 24, /* data=*/ 23, /* cs=*/ 10, /* dc=*/ 9, /* reset=*/ U8X8_PIN_NONE);
+U8X8_SSD1322_NHD_256X64_4W_HW_SPI u8x8(/* cs=*/ 10, /* dc=*/ 9, /* reset=*/ U8X8_PIN_NONE);
 
+
+#define U8LOG_WIDTH 32
+#define U8LOG_HEIGHT 8
+uint8_t u8log_buffer[U8LOG_WIDTH * U8LOG_HEIGHT];
+U8X8LOG u8x8log;
 
 //-------------------------- Setup --------------------------
 
@@ -69,10 +72,18 @@ void setup() {
   u8x8.begin();
   u8x8.setFont(u8x8_font_chroma48medium8_r);
 
+  u8x8log.begin(u8x8, U8LOG_WIDTH, U8LOG_HEIGHT, u8log_buffer);
+  u8x8log.setRedrawMode(1);    // 0: Update screen with newline, 1: Update screen for every char
+
+//  u8x8.clear();
+//  u8x8.setCursor(0, 0);
+//  u8x8.println("Launched from Exmouth, South");
+//  u8x8.println("Devon about twenty five");
+//  u8x8.println("minutes ago - ");
+//  u8x8.println("http://rnli.org/exmouth");
+
+
   Serial.println("IO test");
-
-
-
 
   // initialize the LED as an output:
   pinMode(ledPin, OUTPUT);
@@ -86,7 +97,7 @@ void setup() {
   while (! Serial);
 
   // connect to io.adafruit.com
-  //  Serial.println("Connecting to Adafruit IO");
+  Serial.println("Connecting to Adafruit IO");
   io.connect();
 
   // set up a message handler for the 'sharedFeed' feed.
@@ -97,7 +108,7 @@ void setup() {
 
   // wait for a connection
   while (io.status() < AIO_CONNECTED) {
-    //    Serial.print(".");
+    Serial.print(".");
     delay(500);
   }
 
@@ -131,29 +142,14 @@ void loop() {
 
   io.run();
 
-  //  tweet = "Jonathan";
-  //  Serial.print("TEST POINT 1");
-  //  Serial.println("\n");
-  //  u8x8.clear();
-  //  u8x8.setCursor(0, 0);
-  //  u8x8.print(tweet);
-  //
-  //  delay(10000);
-  //  tweet = "Clare";
-  //  Serial.print("TEST POINT 2");
-  //  Serial.println("\n");
-  //  u8x8.clear();
-  //  u8x8.setCursor(0, 0);
-  //  u8x8.print(tweet);
-  //  delay(10000);
-
   currentTime = millis();
 
   timer = currentTime - startTime;
+  timeLeft = (contractLength - (currentTime - startTime)) / 1000;
 
-  Serial.print("Time Left in Contract: ");
-  Serial.print((contractLength - (currentTime - startTime)) / 1000);
-  Serial.println(" seconds");
+  //  Serial.print("Time Left in Contract: ");
+  //  Serial.print((contractLength - (currentTime - startTime)) / 1000);
+  //  Serial.println(" seconds");
 
   //-------------------------- If there is a timer runing and an event happened  --------------------------
 
@@ -162,13 +158,12 @@ void loop() {
     Serial.print("counter =    ");
     Serial.println(X);
     //-------------------------- Do this section if there is a RNLI launch  --------------------------
-
-    Serial.print("TEST POINT 3 -- ");
+    Serial.print("tweet =    ");
     Serial.println(tweet);
-
-    u8x8.clear();
-    u8x8.setCursor(0, 0);
-    u8x8.print(tweet);
+    u8x8log.print("\f");      // \f = form feed: clear the screen
+    u8x8log.print(tweet);
+//    u8x8log.print("\n");
+    delay(500);
 
     //-------------------------- Reset trigger and take 1 off the count  --------------------------
 
@@ -188,7 +183,7 @@ void loop() {
   }
 
   else if (timer > contractLength) {
-    Serial.println("Contract finished - restarting contract");
+    Serial.println("Contract finished");
     happened = 0;
   }
 
@@ -202,8 +197,7 @@ void handleMessage(AdafruitIO_Data * data) {
 
   tweet = data->toString();
 
+
   happened = 1;
-
-
 
 }
